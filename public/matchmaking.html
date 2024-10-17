@@ -12,7 +12,7 @@
     <div id="status"></div>
 
     <script>
-        const socket = io(); // Inizializza la connessione Socket.IO
+        const socket = io('https://u-card-game.vercel.app');
 
         // Gestisci il clic sul pulsante di matchmaking
         document.getElementById('matchmakingButton').onclick = function() {
