@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matchmaking</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Inizia il Matchmaking</h1>
+  <button id="start-matchmaking">Cerca Partita</button>
+  <p id="status"></p>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const statusText = document.getElementById('status');
+    const matchmakingButton = document.getElementById('start-matchmaking');
+
+    matchmakingButton.addEventListener('click', () => {
+      statusText.textContent = "In attesa di un avversario...";
+      socket.emit('joinMatchmaking');
+    });
+
+    // Ascolta l'evento di match trovato
+    socket.on('matchFound', (data) => {
+      statusText.textContent = "Partita trovata! Inizia contro " + data.opponentId;
+      // Esegui il redirect alla pagina di gioco
+      setTimeout(() => {
+        window.location.href = `/game.html?roomId=${data.roomId}`;
+      }, 2000);
+    });
+
+    // Eventuale messaggio di errore
+    socket.on('errorMessage', (message) => {
+      statusText.textContent = message;
+    });
+  </script>
+</body>
+</html>
