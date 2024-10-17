@@ -1,62 +1,52 @@
 const express = require('express');
 const http = require('http');
-const socketIo = require('socket.io');
+const { Server } = require('socket.io');
 const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
-
-let matchmakingQueue = [];
+const io = new Server(server);
 
 // Serve i file statici dalla cartella "public"
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Quando un giocatore si connette
+// Array per tenere traccia dei giocatori in attesa
+let waitingPlayers = [];
+
+// Gestisci le connessioni dei socket
 io.on('connection', (socket) => {
-  console.log(`Giocatore connesso: ${socket.id}`);
+    console.log(`Giocatore connesso: ${socket.id}`);
 
-  // Quando un giocatore entra in matchmaking
-  socket.on('joinMatchmaking', () => {
-    console.log(`Giocatore ${socket.id} entra in matchmaking`);
-    matchmakingQueue.push(socket.id);
+    // Aggiungi il giocatore alla lista in attesa per il matchmaking
+    waitingPlayers.push(socket);
 
-    // Se c'è già un altro giocatore in coda
-    if (matchmakingQueue.length >= 2) {
-      const player1 = matchmakingQueue.shift();  // Primo giocatore
-      const player2 = matchmakingQueue.shift();  // Secondo giocatore
+    // Prova a fare il matchmaking
+    if (waitingPlayers.length >= 2) {
+        const player1 = waitingPlayers.shift(); // Prendi il primo giocatore
+        const player2 = waitingPlayers.shift(); // Prendi il secondo giocatore
 
-      // Crea una stanza (room) unica per i due giocatori
-      const roomId = `${player1}-${player2}`;
-      io.to(player1).emit('matchFound', { roomId, opponentId: player2 });
-      io.to(player2).emit('matchFound', { roomId, opponentId: player1 });
+        // Crea una sala per i due giocatori
+        const roomId = `${player1.id}-${player2.id}`;
+        player1.join(roomId);
+        player2.join(roomId);
 
-      console.log(`Match creato tra ${player1} e ${player2} nella stanza ${roomId}`);
+        // Informa i giocatori che sono stati messi in coppia
+        player1.emit('match_found', { opponentId: player2.id });
+        player2.emit('match_found', { opponentId: player1.id });
+
+        console.log(`Giocatori abbinati in sala: ${roomId}`);
     }
-  });
 
-  // Quando un giocatore si disconnette
-  socket.on('disconnect', () => {
-    console.log(`Giocatore disconnesso: ${socket.id}`);
-
-    // Se il giocatore era in matchmaking, rimuovilo dalla coda
-    const index = matchmakingQueue.indexOf(socket.id);
-    if (index !== -1) {
-      matchmakingQueue.splice(index, 1);
-    }
-  });
+    // Gestisci la disconnessione del giocatore
+    socket.on('disconnect', () => {
+        console.log(`Giocatore disconnesso: ${socket.id}`);
+        // Rimuovi il giocatore dalla lista di attesa
+        waitingPlayers = waitingPlayers.filter(player => player !== socket);
+    });
 });
 
+// Avvia il server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server in ascolto su http://localhost:${PORT}`);
-});
-
-// Aggiungi la logica per unire i giocatori a una stanza
-socket.on('joinRoom', (data) => {
-  socket.join(data.roomId);
-  console.log(`Giocatore ${socket.id} è entrato nella stanza ${data.roomId}`);
-
-  // Invia un messaggio agli altri giocatori nella stanza
-  socket.to(data.roomId).emit('message', `Giocatore ${socket.id} è entrato nella stanza`);
+    console.log(`Server in ascolto su http://localhost:${PORT}`);
 });
