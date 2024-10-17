@@ -1,40 +1,39 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Matchmaking</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>u-card-game</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 </head>
 <body>
-  <h1>Inizia il Matchmaking</h1>
-  <button id="start-matchmaking">Cerca Partita</button>
-  <p id="status"></p>
+    <h1>Test u-card-game matchmaking</h1>
+    <button id="matchmakingButton">test matchmaking</button>
+    <div id="status"></div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
-    const statusText = document.getElementById('status');
-    const matchmakingButton = document.getElementById('start-matchmaking');
+    <script>
+        const socket = io(); // Inizializza la connessione Socket.IO
 
-    matchmakingButton.addEventListener('click', () => {
-      statusText.textContent = "In attesa di un avversario...";
-      socket.emit('joinMatchmaking');
-    });
+        // Gestisci il clic sul pulsante di matchmaking
+        document.getElementById('matchmakingButton').onclick = function() {
+            socket.emit('join_matchmaking');
+            document.getElementById('status').textContent = 'In attesa di un avversario...';
+        };
 
-    // Ascolta l'evento di match trovato
-    socket.on('matchFound', (data) => {
-      statusText.textContent = "Partita trovata! Inizia contro " + data.opponentId;
-      // Esegui il redirect alla pagina di gioco
-      setTimeout(() => {
-        window.location.href = `/game.html?roomId=${data.roomId}`;
-      }, 2000);
-    });
+        // Ricevi l'evento quando un match è trovato
+        socket.on('match_found', ({ opponentId }) => {
+            document.getElementById('status').textContent = `Partita trovata! Avversario ID: ${opponentId}`;
+            console.log('Partita trovata con ID avversario:', opponentId);
+            // Qui puoi aggiungere la logica per avviare il gioco
+        });
 
-    // Eventuale messaggio di errore
-    socket.on('errorMessage', (message) => {
-      statusText.textContent = message;
-    });
-  </script>
+        socket.on('connect', () => {
+            console.log('Connesso al server con ID:', socket.id);
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnesso dal server');
+        });
+    </script>
 </body>
 </html>
