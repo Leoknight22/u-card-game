@@ -51,3 +51,12 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server in ascolto su http://localhost:${PORT}`);
 });
+
+// Aggiungi la logica per unire i giocatori a una stanza
+socket.on('joinRoom', (data) => {
+  socket.join(data.roomId);
+  console.log(`Giocatore ${socket.id} è entrato nella stanza ${data.roomId}`);
+
+  // Invia un messaggio agli altri giocatori nella stanza
+  socket.to(data.roomId).emit('message', `Giocatore ${socket.id} è entrato nella stanza`);
+});
