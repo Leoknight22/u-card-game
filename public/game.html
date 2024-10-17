@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gioco di Carte</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Partita in corso</h1>
+  <div id="game-board">
+    <!-- Interfaccia del gioco di carte -->
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('roomId');
+
+    // Unisciti alla stanza della partita
+    socket.emit('joinRoom', { roomId });
+
+    // Logica del gioco
+    // Qui potrai gestire la logica specifica del gioco di carte
+
+    socket.on('message', (data) => {
+      console.log(`Ricevuto messaggio: ${data}`);
+    });
+  </script>
+</body>
+</html>
