@@ -1,4 +1,4 @@
-const socket = io();
+const socket = io('https://u-card-game.vercel.app');
 
 // Funzione per inviare una mossa al server
 function playCard(cardId) {
