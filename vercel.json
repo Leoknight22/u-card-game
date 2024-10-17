@@ -1,4 +1,9 @@
 {
-  "version": 2
-  
+  "version": 2,
+    "routes": [
+    {
+      "src": "/socket.io/(.*)",
+      "dest": "/socket.io/$1"
+    }
+  ]
 }
